@@ -57,6 +57,9 @@ void move_to_position(int index)
     move(y, x);
 }
 
+/**
+ * Print all of the remaining cards in the tableau to the terminal.
+ */
 void print_deck(const struct deck *deck)
 {
     int i;
@@ -73,6 +76,74 @@ void redraw_deck(const struct deck *deck)
     print_deck(deck);
 }
 
+/**
+ * Return whether or not one card may be moved on top of another card.
+ */
+int matches(const struct card card1, const struct card card2)
+{
+    return card1.rank == card2.rank || card1.suit == card2.suit;
+}
+
+/**
+ * Return whether or not the card at `position` in `deck` can be moved `n`
+ * positions backward.
+ */
+int can_move_n(const struct deck *deck, int position, int n)
+{
+    return position - n >= 0 &&
+        matches(deck->cards[position], deck->cards[position - n]);
+}
+
+/**
+ * Move the card at `source_index` in `deck` to `destination_index` and draw
+ * that card at its new location, over top of the source card. This does not
+ * affect the source card in the deck or on the screen.
+ */
+void move_card(struct deck *deck, int destination_index, int source_index)
+{
+    deck->cards[destination_index] = deck->cards[source_index];
+    move_to_position(destination_index);
+    print_card(deck->cards[destination_index]);
+}
+
+/**
+ * If it is a legal move, move the card at `position` in `deck` back `n` spaces,
+ * removing the card previously `n` spaces behind `position` from play. If the
+ * move is not legal, do nothing.
+ */
+void try_move_n(struct deck *deck, int *position, int n)
+{
+    int i;
+
+    if (! can_move_n(deck, *position, n)) return;
+
+    *position -= n;
+    move_card(deck, *position, *position + n);
+    --deck->total_cards;
+    for (i = *position + n; i < deck->total_cards; ++i) {
+        move_card(deck, i, i + 1);
+    }
+
+    move_to_position(deck->total_cards);
+    for (i = 0; i < CHARS_PER_CARD; ++i) addstr(" ");
+}
+
+/**
+ * Return whether or not there are any legal moves available in the deck.
+ */
+int is_game_over(const struct deck *deck)
+{
+    int i;
+
+    for (i = 0; i < deck->total_cards; ++i) {
+        if (can_move_n(deck, i, 1) || can_move_n(deck, i, 3)) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 void handle_input(int input, struct deck *deck, int *position)
 {
     const int cards_per_row = get_cards_per_row();
@@ -84,11 +155,22 @@ void handle_input(int input, struct deck *deck, int *position)
     case 'k': new_position = *position - cards_per_row; break;
     case 'j': new_position = *position + cards_per_row; break;
     case 'r': redraw_deck(deck); break;
+    case '1': try_move_n(deck, position, 1); break;
+    case '3': try_move_n(deck, position, 3); break;
     case 'q': die("You quit with %d piles.\n", deck->total_cards);
     }
 
     if (new_position >= 0 && new_position < deck->total_cards) {
         *position = new_position;
+    }
+}
+
+static void print_outcome(const struct deck *deck)
+{
+    if (deck->total_cards == 1) {
+        die("You won!\n");
+    } else {
+        die("You lost with %d piles remaining.\n", deck->total_cards);
     }
 }
 
@@ -99,11 +181,13 @@ void accordion(struct deck *deck)
     print_deck(deck);
     move_to_position(position);
 
-    for (;;) {
+    while (! is_game_over(deck)) {
         handle_input(getch(), deck, &position);
         move_to_position(position);
         refresh();
     }
+
+    print_outcome(deck);
 }
 
 int main(void)
