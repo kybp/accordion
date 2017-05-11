@@ -32,16 +32,11 @@ void fill_deck(struct deck *deck);
 void shuffle(struct deck *deck);
 
 /**
- * Print a one-character representation of the given rank at the current cursor
- * position.
+ * Store a two-character representation of `card` in `destination`, with a
+ * trailing NUL. `destination` must be a valid address pointing to at least 3
+ * characters.
  */
-void print_rank(enum rank rank);
-
-/**
- * Print a one-character representation of the given suit at the current cursor
- * position.
- */
-void print_suit(enum suit suit);
+void string_from_card(char *destination, const struct card card);
 
 /**
  * Print a one-character representation of the given rank at the current cursor

@@ -29,39 +29,50 @@ void shuffle(struct deck *deck)
     }
 }
 
-void print_rank(enum rank rank)
+static char char_from_rank(enum rank rank)
 {
     switch (rank) {
-    case ace:   addstr("A"); break;
-    case deuce: addstr("2"); break;
-    case trey:  addstr("3"); break;
-    case four:  addstr("4"); break;
-    case five:  addstr("5"); break;
-    case six:   addstr("6"); break;
-    case seven: addstr("7"); break;
-    case eight: addstr("8"); break;
-    case nine:  addstr("9"); break;
-    case ten:   addstr("T"); break;
-    case jack:  addstr("J"); break;
-    case queen: addstr("Q"); break;
-    case king:  addstr("K"); break;
+    case ace:   return 'A';
+    case deuce: return '2';
+    case trey:  return '3';
+    case four:  return '4';
+    case five:  return '5';
+    case six:   return '6';
+    case seven: return '7';
+    case eight: return '8';
+    case nine:  return '9';
+    case ten:   return 'T';
+    case jack:  return 'J';
+    case queen: return 'Q';
+    case king:  return 'K';
     default: die("print_rank: Invalid card rank: %d\n", rank);
     }
+
+    return '\0';                /* never reached */
 }
 
-void print_suit(enum suit suit)
+static char char_from_suit(enum suit suit)
 {
     switch (suit) {
-    case clubs:    addstr("C"); break;
-    case diamonds: addstr("D"); break;
-    case hearts:   addstr("H"); break;
-    case spades:   addstr("S"); break;
+    case clubs:    return 'C';
+    case diamonds: return 'D';
+    case hearts:   return 'H';
+    case spades:   return 'S';
     default: die("print_suit: Invalid card suit: %d\n", suit);
     }
+
+    return '\0';                /* never reached */
+}
+
+void string_from_card(char *destination, const struct card card)
+{
+    destination[0] = char_from_rank(card.rank);
+    destination[1] = char_from_suit(card.suit);
+    destination[2] = '\0';
 }
 
 void print_card(const struct card card)
 {
-    print_rank(card.rank);
-    print_suit(card.suit);
+    addch(char_from_rank(card.rank));
+    addch(char_from_suit(card.suit));
 }
