@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <curses.h>
 #include "cards.h"
-#include "util.h"
+#include "message.h"
 
 void fill_deck(struct deck *deck)
 {
